@@ -2,18 +2,13 @@ import { Component, type FormEvent } from 'react';
 import { ArrowRight, BookOpen, Check, FileText, LayoutGrid, LogOut, Moon, Plus, ShieldCheck, Sparkles, Sun, X } from 'lucide-react';
 import { ApiClient, AuthenticationRequired, type Note, type Session } from '../services/ApiClient';
 import { ThemeService, type Theme } from '../services/ThemeService';
-import { AgentPanel } from './AgentPanel';
-import { ExperienceBuilder } from './ExperienceBuilder';
 
 interface State { session: Session | null; loading: boolean; theme: Theme; notes: Note[]; error: string | null;
-  view: 'home' | 'notes' | 'experience'; agentOpen: boolean; noteOpen: boolean; title: string; body: string; saving: boolean }
+  view: 'home' | 'notes'; noteOpen: boolean; title: string; body: string; saving: boolean }
 
 export class App extends Component<object, State> {
   private api = new ApiClient();
   private noteTrigger: HTMLElement | null = null;
-  private openAgent = (): void => {
-    this.setState({ agentOpen: true }, () => document.querySelector<HTMLTextAreaElement>('[aria-label="Message IEEEAgent"]')?.focus());
-  };
   private openNote = (): void => {
     this.noteTrigger = document.activeElement as HTMLElement;
     this.setState({ noteOpen: true });
@@ -22,7 +17,7 @@ export class App extends Component<object, State> {
     if (!this.state.saving) this.setState({ noteOpen: false }, () => this.noteTrigger?.focus());
   };
   state: State = { session: null, loading: true, theme: ThemeService.current(), notes: [], error: null,
-    view: 'home', agentOpen: false, noteOpen: false, title: '', body: '', saving: false };
+    view: 'home', noteOpen: false, title: '', body: '', saving: false };
 
   componentDidMount(): void { ThemeService.apply(this.state.theme); void this.load(); }
   private load = async (): Promise<void> => {
@@ -48,7 +43,7 @@ export class App extends Component<object, State> {
     const { session, loading, notes, error, noteOpen } = this.state;
     if (!session) return <div className="sign-in-page"><header className="login-header"><a className="brand" href="/"><span className="brand-mark">i</span><strong>IEEE<span>workspace</span></strong></a>{this.themeSwitch()}</header>
       <main className="login-main"><div className="login-art" aria-hidden="true"><div className="art-grid"/><div className="art-orbit one"/><div className="art-orbit two"/><div className="art-center"><Sparkles size={42}/></div><span className="art-label label-one">A new perspective.</span><span className="art-label label-two">Your next big idea.</span></div>
-        <div className="login-content"><span className="eyebrow">THINK CLEARLY. BUILD THOUGHTFULLY.</span><h1>A little space.<br/>Endless possibility.</h1><p>Your ideas, your notes, and an intelligent companion.<br/>All together in one thoughtful workspace.</p>
+        <div className="login-content"><span className="eyebrow">THINK CLEARLY. BUILD THOUGHTFULLY.</span><h1>A little space.<br/>Endless possibility.</h1><p>Your ideas and your notes.<br/>All together in one thoughtful workspace.</p>
           {error && <p className="error-banner" role="alert">{error}</p>}
           {loading ? <span className="loading-status">Connect to your workspace…</span> : <a className="primary-button" href="/oauth2/authorization/authentik">Sign in to your workspace <ArrowRight size={18}/></a>}
           <div className="login-security"><ShieldCheck size={15}/> Secure sign-in with authentik</div></div></main><footer className="login-footer">IEEE WORKSPACE <span>A place for what comes next.</span></footer></div>;
@@ -56,17 +51,15 @@ export class App extends Component<object, State> {
       <header className="topbar"><a className="brand" href="/"><span className="brand-mark">i</span><strong>IEEE<span>workspace</span></strong></a><span className="topbar-divider"/><span className="workspace-caption">Personal workspace</span>
         <div className="account-actions">{this.themeSwitch()}<span className="account-divider"/><div className="account" aria-label={session.name} title={session.name}><span className="avatar">{session.name.split(' ').slice(0,2).map(name => name[0]).join('')}</span><div><strong>{session.name}</strong><span>Personal account</span></div></div>
           <button className="icon-button" aria-label="Log out" title="Log out" onClick={() => this.api.logout()}><LogOut size={18}/></button></div></header>
-      <div className="body-layout"><nav className="rail" aria-label="Workspace"><div className="rail-top"><button className={this.state.view === 'home' ? 'rail-button active' : 'rail-button'} aria-label="Workspace home" aria-current={this.state.view === 'home' ? 'page' : undefined} onClick={() => this.setState({ view: 'home' })}><LayoutGrid size={21}/></button><button className={this.state.view === 'notes' ? 'rail-button active' : 'rail-button'} aria-label="Go to notes" aria-current={this.state.view === 'notes' ? 'page' : undefined} onClick={() => this.setState({ view: 'notes' })}><FileText size={21}/></button><button className={this.state.view === 'experience' ? 'rail-button active' : 'rail-button'} aria-label="Resume Builder" aria-current={this.state.view === 'experience' ? 'page' : undefined} onClick={() => this.setState({ view: 'experience' })}><BookOpen size={21}/></button></div><span className="rail-bottom"><ShieldCheck size={19}/></span></nav>
-      <main className="workspace-main workspace-empty"><div className="breadcrumb"><LayoutGrid size={13}/> Workspace <span>/</span><strong>{this.state.view === 'home' ? 'Overview' : this.state.view === 'notes' ? 'Notes' : 'Resume Builder'}</strong></div>
-        <div className="page-title"><h1>{this.state.view === 'home' ? 'Workspace' : this.state.view === 'notes' ? 'Notes' : 'Resume Builder'}</h1><span className="date-label">{new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date())}</span></div>
+      <div className="body-layout"><nav className="rail" aria-label="Workspace"><div className="rail-top"><button className={this.state.view === 'home' ? 'rail-button active' : 'rail-button'} aria-label="Workspace home" aria-current={this.state.view === 'home' ? 'page' : undefined} onClick={() => this.setState({ view: 'home' })}><LayoutGrid size={21}/></button><button className={this.state.view === 'notes' ? 'rail-button active' : 'rail-button'} aria-label="Go to notes" aria-current={this.state.view === 'notes' ? 'page' : undefined} onClick={() => this.setState({ view: 'notes' })}><FileText size={21}/></button></div><span className="rail-bottom"><ShieldCheck size={19}/></span></nav>
+      <main className="workspace-main workspace-empty"><div className="breadcrumb"><LayoutGrid size={13}/> Workspace <span>/</span><strong>{this.state.view === 'home' ? 'Overview' : 'Notes'}</strong></div>
+        <div className="page-title"><h1>{this.state.view === 'home' ? 'Workspace' : 'Notes'}</h1><span className="date-label">{new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date())}</span></div>
         {error && <div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" className="icon-button" onClick={() => this.setState({ error: null })}><X size={16}/></button></div>}
         {this.state.view === 'home' && <div className="workspace-canvas" aria-label="Application content"/>}
         {this.state.view === 'notes' && <section id="notes" className="notes-section"><div className="section-title"><h2>Your notes <span className="count-badge">{notes.length}</span></h2><button className="text-button" onClick={this.openNote}><Plus size={15}/> New note</button></div>
-        {notes.length ? <div className="notes-grid">{notes.map(note => <article className="note-card" key={note.id}><FileText size={17}/><h3>{note.title}</h3><p>{note.body}</p><time dateTime={note.createdAt}>{new Date(note.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</time></article>)}</div> : <div className="notes-empty"><span className="empty-icon"><BookOpen size={23}/></span><div><h3>A blank page is a good beginning.</h3><p>Save a thought here, or ask IEEEAgent to capture one for you.</p></div><button className="outline-button" onClick={this.openNote}><Plus size={15}/> Your first note</button></div>}</section>}
-        {this.state.view === 'experience' && <ExperienceBuilder api={this.api} onAuthExpired={() => this.setState({ session: null })}/>}
+        {notes.length ? <div className="notes-grid">{notes.map(note => <article className="note-card" key={note.id}><FileText size={17}/><h3>{note.title}</h3><p>{note.body}</p><time dateTime={note.createdAt}>{new Date(note.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</time></article>)}</div> : <div className="notes-empty"><span className="empty-icon"><BookOpen size={23}/></span><div><h3>A blank page is a good beginning.</h3><p>Save a thought here and return to it later.</p></div><button className="outline-button" onClick={this.openNote}><Plus size={15}/> Your first note</button></div>}</section>}
         <footer className="workspace-footer"><span><ShieldCheck size={13}/> Personal workspace</span><span>IEEE Workspace</span></footer>
-      </main><div className={'agent-container' + (this.state.agentOpen ? ' mobile-open' : '')}><AgentPanel api={this.api} available={session.agentAvailable} onTheme={this.theme} onChange={() => void this.loadNotes()} onClose={() => this.setState({ agentOpen: false })} onAuthExpired={() => this.setState({ session: null })}/></div></div>
-      <button className="mobile-agent-button" onClick={this.openAgent}><Sparkles size={18}/> IEEEAgent</button>
+      </main></div>
       {noteOpen && <div className="modal-backdrop" onClick={event => { if (event.target === event.currentTarget) this.closeNote(); }}><section className="note-dialog" role="dialog" aria-modal="true" aria-labelledby="note-title" onKeyDown={event => {
         if (event.key === 'Escape') this.closeNote();
         if (event.key === 'Tab') {

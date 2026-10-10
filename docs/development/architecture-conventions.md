@@ -13,7 +13,8 @@ Use Vite for UI development. Proxy server paths through Vite.
 Keep OIDC tokens and the client secret on the server. Authlib handles the OIDC flow.
 Use an HTTP-only session cookie and CSRF protection for mutations.
 
-IEEEAgent uses Microsoft Agent Framework for model execution and server tools.
+The application has no agent at this time. Apply the rules below when you add one.
+An agent uses Microsoft Agent Framework for model execution and server tools.
 The MAF AG-UI runner (`agent-framework-ag-ui`) streams AG-UI events over server-sent events.
 Do not map agent events to AG-UI events by hand.
 MAF keeps the thread history on the server. The member subject is the snapshot scope.

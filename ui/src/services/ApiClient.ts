@@ -1,19 +1,10 @@
 export interface Session {
-  name: string; email: string | null; csrfToken: string; csrfHeader: string; agentAvailable: boolean;
+  name: string; email: string | null; csrfToken: string; csrfHeader: string;
 }
 export interface Note { id: string; title: string; body: string; createdAt: string }
 
 export class AuthenticationRequired extends Error {
   constructor(message: string) { super(message); this.name = 'AuthenticationRequired'; }
-}
-
-export type ExperienceType = 'PROJECT' | 'PROFESSIONAL';
-export interface ExperienceFields { company: string | null; projectName: string | null; startDate: string | null; endDate: string | null; description: string | null }
-export interface AnalyzeExperience { type: ExperienceType; originalInput: string }
-export interface SaveExperience extends AnalyzeExperience, ExperienceFields {}
-export interface SavedExperience extends SaveExperience { id: string; createdAt: string }
-export class ExperienceRequestError extends Error {
-  constructor(message: string, public readonly fields: Record<string, string> = {}) { super(message); }
 }
 
 export class ApiClient {
@@ -37,22 +28,6 @@ export class ApiClient {
       headers: this.headers(), body: JSON.stringify({ title, body }) });
     await this.check(response);
     return response.json() as Promise<Note>;
-  }
-
-  async analyzeExperience(input: AnalyzeExperience): Promise<ExperienceFields> {
-    return this.experienceRequest('/api/experiences/analyze', input);
-  }
-  async saveExperience(input: SaveExperience): Promise<SavedExperience> {
-    return this.experienceRequest('/api/experiences', input);
-  }
-  private async experienceRequest<T>(path: string, input: AnalyzeExperience | SaveExperience): Promise<T> {
-    const response = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: this.headers(), body: JSON.stringify(input) });
-    if (response.status === 401 || response.status === 403) await this.check(response);
-    if (!response.ok) {
-      const error = await response.json().catch(() => ({})) as { message?: string; fields?: Record<string, string> };
-      throw new ExperienceRequestError(error.message ?? 'The request failed. Please retry.', error.fields);
-    }
-    return response.json() as Promise<T>;
   }
 
   headers(): Record<string, string> {

@@ -1,0 +1,1 @@
+Show a list of portfolio items. Allow the user to select an item and make changes. Provide AI controls for improving the text and making other enhancements. Make sure the AI agent continues to work with the user on this page.

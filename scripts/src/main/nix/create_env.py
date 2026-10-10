@@ -10,8 +10,7 @@ ROOT = Path(__file__).resolve().parents[4]
 def server_commands() -> list:
     # uv builds the exact locked environment. A stale uv.lock stops setup.
     project = str(ROOT / "server")
-    return [["uv", "sync", "--locked", "--python", "3.12", "--project", project],
-            ["uv", "run", "--locked", "--project", project, "playwright", "install", "chromium"]]
+    return [["uv", "sync", "--locked", "--python", "3.12", "--project", project]]
 
 
 def main() -> None:

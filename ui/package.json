@@ -10,12 +10,9 @@
     "test:e2e": "playwright test"
   },
   "dependencies": {
-    "@ag-ui/core": "0.0.57",
     "lucide-react": "^0.468.0",
     "react": "^19.2.0",
-    "react-dom": "^19.2.0",
-    "react-markdown": "^10.1.0",
-    "remark-gfm": "^4.0.1"
+    "react-dom": "^19.2.0"
   },
   "devDependencies": {
     "@playwright/test": "^1.56.0",

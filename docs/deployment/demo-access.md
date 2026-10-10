@@ -90,7 +90,7 @@ The entry point is [access.sh](../../access.sh), with its implementation in
 
 1. Run `./access.sh external` and copy the printed HTTPS URL.
 2. Open that URL on the laptop. Sign in with an authentik account.
-3. Verify Resume Builder, REST access, and the agent. Verify logout and sign in again.
+3. Verify notes and REST access. Verify logout and sign in again.
 4. Disable Wi-Fi and Tailscale on the phone. Enable cellular data.
 5. Open the same HTTPS URL on the phone. Verify login and the demo features.
 6. Run `./access.sh internal`. Verify the saved LAN URL from a device on the same LAN.
