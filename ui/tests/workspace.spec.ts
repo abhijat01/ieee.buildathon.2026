@@ -63,10 +63,11 @@ test('home keeps the center clear and the left navigation opens notes', async ({
   await expect(page.locator('.notes-section')).toHaveCount(0);
 });
 
-test('the menu has home, notes, and portfolio, and no agent', async ({ page }) => {
+test('the menu has home, notes, portfolio, and resume, and no agent', async ({ page }) => {
   await WorkspaceFixture.signedIn(page);
-  await expect(page.getByRole('navigation', { name: 'Workspace' }).getByRole('button')).toHaveCount(3);
+  await expect(page.getByRole('navigation', { name: 'Workspace' }).getByRole('button')).toHaveCount(4);
   await expect(page.getByRole('button', { name: 'Portfolio', exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Resume', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Resume Builder' })).toHaveCount(0);
   await expect(page.getByText('IEEEAgent')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

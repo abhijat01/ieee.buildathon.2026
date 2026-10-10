@@ -23,6 +23,18 @@ export interface ImprovedText { text: string; note: string }
 export interface SavePortfolioItem extends ExtractedFields { originalText: string; finalText: string }
 export interface PortfolioItem extends ExtractedFields { id: string; text: string; createdAt: string }
 
+export type RelevanceLevel = 'HIGH' | 'MEDIUM' | 'LOW';
+export interface ItemReview { itemId: string; type: ExperienceType; title: string; company: string | null;
+  startDate: string | null; endDate: string | null; relevance: RelevanceLevel; reason: string;
+  matchedKeywords: string[]; proposed: boolean }
+export interface JobAnalysis { jobTitle: string; company: string | null; requirements: string[]; keywords: string[];
+  items: ItemReview[] }
+export interface KeywordCheck { inResume: string[]; inExcludedItems: string[]; notInPortfolio: string[] }
+export interface AtsCheck { keywords: KeywordCheck; formatChecks: string[] }
+export interface ItemDescription { itemId: string; title: string; company: string | null; originalText: string;
+  improvedText: string }
+export interface Resume { markdown: string; fileName: string; descriptions: ItemDescription[]; atsCheck: AtsCheck }
+
 export class ApiClient {
   private session: Session | null = null;
 
@@ -66,7 +78,14 @@ export class ApiClient {
 
   savePortfolioItem(item: SavePortfolioItem): Promise<PortfolioItem> { return this.post('/api/portfolio', item); }
 
-  /** Sends a portfolio request. A rejected request gives an ApiError with the server message. */
+  analyzeJob(text: string): Promise<JobAnalysis> { return this.post('/api/resume/analyze', { jobText: text }); }
+
+  /** The browser sends only the item identifiers. The server reads the items of the member. */
+  writeResume(jobText: string, keywords: string[], itemIds: string[]): Promise<Resume> {
+    return this.post('/api/resume/write', { jobText, keywords, itemIds });
+  }
+
+  /** Sends a portfolio or resume request. A rejected request gives an ApiError with the server message. */
   private async post<T>(path: string, body: object): Promise<T> {
     const response = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: this.headers(), body: JSON.stringify(body) });
     if (response.status === 401 || response.status === 403) await this.check(response);
