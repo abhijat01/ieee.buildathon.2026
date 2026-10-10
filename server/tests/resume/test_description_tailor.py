@@ -41,7 +41,7 @@ def test_the_instructions_protect_the_facts_and_treat_the_input_as_data():
 @pytest.mark.parametrize("reply", [
     "This is not JSON.",
     '{"summary":"Text"}',
-    REPLY.replace("- Built the data pipeline with Python", "t" * 4001),
+    REPLY.replace("- Built the data pipeline with Python", "t" * 20001),
     REPLY.replace("Software engineer with experience in Python.", "s" * 601),
 ])
 async def test_invalid_model_output_raises_an_explicit_error(reply):

@@ -21,7 +21,7 @@ const SHOWN: ToolResult = { status: 'shown', message: 'The form shows the propos
 export class AssistantTools {
   // The server owns these limits. Their source is the parameter schema of each tool in
   // server/src/ieee/portfolio/assistant: propose_text_arguments.py, propose_skills_arguments.py, and field_change.py.
-  static readonly textLimit = 4000;
+  static readonly textLimit = 20000;
   static readonly labelLimit = 40;
   static readonly reasonLimit = 200;
   static readonly skillLimit = 40;

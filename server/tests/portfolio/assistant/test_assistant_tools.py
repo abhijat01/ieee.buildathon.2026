@@ -17,7 +17,7 @@ def test_each_definition_has_a_description_and_a_schema_with_a_description_for_e
         assert definition["description"]
         assert all(parameter["description"] for parameter in definition["parameters"]["properties"].values())
     text, skills, fields = (definition["parameters"] for definition in definitions)
-    assert [text["properties"][name]["maxLength"] for name in ("text", "label", "reason")] == [4000, 40, 200]
+    assert [text["properties"][name]["maxLength"] for name in ("text", "label", "reason")] == [20000, 40, 200]
     assert (skills["properties"]["skills"]["maxItems"], skills["properties"]["skills"]["items"]["maxLength"]) == (20, 40)
     assert fields["$defs"]["ItemField"]["enum"] == ["title", "type", "company", "startDate", "endDate"]
     assert fields["$defs"]["FieldChange"]["properties"]["reason"]["maxLength"] == 200
@@ -29,7 +29,7 @@ def test_an_unknown_tool_name_has_no_definition():
 
 
 @pytest.mark.parametrize("arguments, values", [
-    (ProposeTextArguments, {"text": "x" * 4001, "label": "L", "reason": "R"}),
+    (ProposeTextArguments, {"text": "x" * 20001, "label": "L", "reason": "R"}),
     (ProposeTextArguments, {"text": "Text", "label": "L" * 41, "reason": "R"}),
     (ProposeTextArguments, {"text": "Text", "label": "L", "reason": "R" * 201}),
     (ProposeSkillsArguments, {"skills": ["s" * 41]}),

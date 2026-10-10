@@ -1,6 +1,6 @@
 [project]
 name = "ieee-server"
-version = "0.3.0"
+version = "0.4.0"
 description = "IEEE Workspace server: FastAPI and SQLAlchemy."
 requires-python = ">=3.12,<3.13"
 dependencies = [

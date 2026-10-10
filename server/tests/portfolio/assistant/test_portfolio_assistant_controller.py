@@ -66,7 +66,7 @@ def test_rejects_invalid_input_and_a_tool_that_is_not_in_the_allowlist(settings)
     assistant = AssistantClients(settings, say("Done."))
     member = assistant.clients.member()
     for body in (assistant.body(threadId="bad id"), assistant.body(tools=[{"name": "deleteItem"}]),
-                 assistant.body(state=context(assistant.item_id, text="x" * 4001))):
+                 assistant.body(state=context(assistant.item_id, text="x" * 20001))):
         response = member.post(PATH, json=body)
         assert response.status_code == 400 and response.json() == {"message": "The request is invalid."}
 

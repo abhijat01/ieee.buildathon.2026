@@ -7,6 +7,7 @@ from ieee.portfolio.experience_period import ExperiencePeriod
 from ieee.portfolio.experience_type import ExperienceType
 from ieee.portfolio.item_content import ItemContent
 from ieee.portfolio.portfolio_item_view import PortfolioItemView
+from ieee.portfolio.portfolio_limits import TEXT_LENGTH
 
 
 class PortfolioItem(Base):
@@ -20,8 +21,8 @@ class PortfolioItem(Base):
     start_date: Mapped[str | None] = mapped_column(String(10))
     end_date: Mapped[str | None] = mapped_column(String(10))
     skills: Mapped[list[str]] = mapped_column(JSON)
-    original_text: Mapped[str] = mapped_column(String(4000))
-    final_text: Mapped[str] = mapped_column(String(4000))
+    original_text: Mapped[str] = mapped_column(String(TEXT_LENGTH))
+    final_text: Mapped[str] = mapped_column(String(TEXT_LENGTH))
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
     updated_at: Mapped[datetime] = mapped_column(DateTime(timezone=True))
 

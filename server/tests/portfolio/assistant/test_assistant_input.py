@@ -33,7 +33,7 @@ def test_ignores_a_schema_from_the_browser_and_other_extra_fields():
 
 @pytest.mark.parametrize("changes", [
     {"title": "T" * 161}, {"company": "C" * 161}, {"startDate": "2022-03-011"}, {"endDate": "x" * 11},
-    {"text": "x" * 4001}, {"skills": ["s" * 41]}, {"skills": ["skill"] * 101}, {"type": "HOBBY"},
+    {"text": "x" * 20001}, {"skills": ["s" * 41]}, {"skills": ["skill"] * 101}, {"type": "HOBBY"},
     {"itemId": ""}, {"itemId": "i" * 37}, {"decisions": [DECISION] * 31},
     {"decisions": [{"proposal": "Skill: Docker", "outcome": "ignored"}]},
     {"decisions": [{"proposal": "p" * 201, "outcome": "accepted"}]},

@@ -15,7 +15,7 @@ test('Analyze is disabled without text, shows the AI at work, and keeps the text
   await page.getByRole('button', { name: 'Add experience' }).click();
   await expect(page.getByRole('button', { name: 'Analyze', exact: true })).toBeDisabled();
   await page.getByLabel('Your experience').fill(PortfolioFixture.original);
-  await expect(page.getByText(`${PortfolioFixture.original.length} / 4000`)).toBeVisible();
+  await expect(page.getByText(`${PortfolioFixture.original.length} / 20000`)).toBeVisible();
   portfolio.failAi = true;
   const release = portfolio.holdAi();
   await page.getByRole('button', { name: 'Analyze', exact: true }).click();

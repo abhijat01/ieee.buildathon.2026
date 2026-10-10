@@ -8,7 +8,7 @@ class ImprovementInstructions:
         "Keep each fact. Do not add a fact, a number, a name, a date, or a skill that the text does not state.\n"
         "Where a number can make a result stronger, add a short hint in italics that asks the member for it.\n"
         "Use clear, active language. Keep the Markdown structure: headings, lists, and bold text.\n"
-        "Keep the text under 3500 characters.\n"
+        "Keep the text under 18000 characters.\n"
         "In the note, state in one short sentence what you changed."
     )
 

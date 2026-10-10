@@ -74,7 +74,7 @@ def test_a_member_cannot_read_the_item_of_another_owner(ai_clients):
 
 def test_input_limits_are_enforced(ai_clients):
     member = ai_clients.member()
-    assert member.post("/api/portfolio/analyze", json={"text": "x" * 4001}).status_code == 400
+    assert member.post("/api/portfolio/analyze", json={"text": "x" * 20001}).status_code == 400
     assert member.post("/api/portfolio/analyze", json={"text": "   "}).status_code == 400
     assert member.post("/api/portfolio/improve", json={"text": ORIGINAL, "instruction": "x" * 301}).status_code == 400
     assert member.post("/api/portfolio", json={**ITEM, "title": "T" * 161}).status_code == 400

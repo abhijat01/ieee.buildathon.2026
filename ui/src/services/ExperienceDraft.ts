@@ -21,7 +21,7 @@ export interface ExperienceDraft {
 }
 
 export class ExperienceDrafts {
-  static readonly textLimit = 4000;
+  static readonly textLimit = 20000;
   static readonly instructionLimit = 300;
   static readonly nameLimit = 160;
   static readonly dateLimit = 10;

@@ -31,7 +31,7 @@ async def test_works_without_an_instruction():
     assert "Instruction from the member: none" in client.text_of("user")
 
 
-@pytest.mark.parametrize("model_reply", ["no JSON", '{"text":"only text"}', reply("  "), reply("x" * 4001)])
+@pytest.mark.parametrize("model_reply", ["no JSON", '{"text":"only text"}', reply("  "), reply("x" * 20001)])
 async def test_invalid_model_output_raises_an_explicit_error(model_reply):
     with pytest.raises(ExperienceAiError):
         await improver(ScriptedChatClient(model_reply)).improve(ORIGINAL, "")

@@ -26,8 +26,8 @@ def test_a_missing_unknown_or_repeated_item_identifier_is_rejected(item_ids):
         check(result)
 
 
-def test_a_text_over_4000_characters_is_rejected():
-    long_text = ImprovedDescription.model_construct(item_id="p1", text="t" * 4001)
+def test_a_text_over_20000_characters_is_rejected():
+    long_text = ImprovedDescription.model_construct(item_id="p1", text="t" * 20001)
     result = TailoredResume.model_construct(summary="Summary.", descriptions=[
         long_text, ImprovedDescription(item_id="w1", text="- Text")])
     with pytest.raises(ExperienceAiError):

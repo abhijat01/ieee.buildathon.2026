@@ -38,7 +38,7 @@ describe('AssistantTools', () => {
     ['proposeText', 'not json', 'not valid JSON'],
     ['proposeText', '[1]', 'JSON object'],
     ['proposeText', { text: '', label: 'L', reason: 'R' }, 'text must be'],
-    ['proposeText', { text: 'x'.repeat(4001), label: 'L', reason: 'R' }, 'text must be'],
+    ['proposeText', { text: 'x'.repeat(20001), label: 'L', reason: 'R' }, 'text must be'],
     ['proposeText', { text: 'Text', label: 'L'.repeat(41), reason: 'R' }, 'label must be'],
     ['proposeText', { text: 'Text', label: 'L', reason: 'R'.repeat(201) }, 'reason must be'],
     ['proposeText', { text: 42, label: 'L', reason: 'R' }, 'text must be'],
