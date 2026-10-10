@@ -52,6 +52,31 @@ test('portfolio reads use the item identifier and the session cookie', async () 
   expect(fetch.mock.calls[1]).toEqual(['/api/portfolio', { credentials: 'same-origin' }]);
   expect(fetch.mock.calls[2][0]).toBe('/api/portfolio/a%2Fb');
 });
+test('resume calls send the CSRF header and the correct body', async () => {
+  const { api, fetch } = await ApiFixture.client();
+  const analysis = { jobTitle: 'Engineer', company: 'Contoso', requirements: ['Python'], keywords: ['Python'], items: [] };
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify(analysis)));
+  expect(await api.analyzeJob('Job text')).toEqual(analysis);
+  const resume = { markdown: '# Abhijat\n', fileName: 'resume-abhijat.md', descriptions: [],
+    atsCheck: { keywords: { inResume: ['Python'], inExcludedItems: [], notInPortfolio: [] }, formatChecks: [] } };
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify(resume)));
+  expect(await api.writeResume('Job text', ['Python'], ['p1', 'w1'])).toEqual(resume);
+  const calls = fetch.mock.calls.slice(1).map(([path, options]) => ({ path, body: JSON.parse(options.body), options }));
+  expect(calls.map(call => call.path)).toEqual(['/api/resume/analyze', '/api/resume/write']);
+  expect(calls[0].body).toEqual({ jobText: 'Job text' });
+  expect(calls[1].body).toEqual({ jobText: 'Job text', keywords: ['Python'], itemIds: ['p1', 'w1'] });
+  for (const call of calls) expect(call.options).toMatchObject({ method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': 'token' } });
+});
+test('a 503 response of a resume call gives an ApiError with the server message', async () => {
+  const { api, fetch } = await ApiFixture.client();
+  const message = 'The AI is not available at this time. Your text is safe. Try again.';
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ message }), { status: 503 }));
+  await expect(api.analyzeJob('Job text')).rejects.toMatchObject({ name: 'ApiError', message });
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ message }), { status: 503 }));
+  await expect(api.writeResume('Job text', [], ['p1'])).rejects.toMatchObject({ name: 'ApiError', message });
+  fetch.mockResolvedValueOnce(new Response('', { status: 401 }));
+  await expect(api.writeResume('Job text', [], ['p1'])).rejects.toBeInstanceOf(AuthenticationRequired);
+});
 test('a rejected portfolio call gives the server message, and expired authentication stays distinct', async () => {
   const { api, fetch } = await ApiFixture.client();
   fetch.mockResolvedValueOnce(new Response(JSON.stringify({ message: 'The AI is not available at this time.' }), { status: 503 }));
