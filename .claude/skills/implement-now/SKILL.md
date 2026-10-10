@@ -109,7 +109,7 @@ git switch -c issue-NNN 2>/dev/null || git switch issue-NNN
 
 - Follow the implementation plan step by step. Do not add work that the plan does not contain.
 - Follow `CLAUDE.md`, `docs/development/python.md`, and `docs/development/architecture-conventions.md`.
-- Read `agent-ws/ai-best-practices.md` if the issue touches the agent or LLM calls.
+- Read `agent-ws/ai-best-practices.md` if the issue touches an agent or LLM calls.
 - Match the mockup: layout, labels, styles, and states.
 - Write the tests from the test plan.
 - Add a Playwright test `ui/tests/issue-NNN.spec.ts` for the main flow.

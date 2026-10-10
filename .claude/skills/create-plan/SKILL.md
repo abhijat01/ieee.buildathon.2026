@@ -27,7 +27,7 @@ I read the related screens and server APIs.
 ---
 # ✅ Done · Explore the code
 - Found 3 related files.
-- The change touches the Resume Builder screen.
+- The change touches the home screen.
 ```
 
 **Final banner.** Write it at the end. Use a level-1 heading and a short list:
@@ -89,7 +89,7 @@ The steps are:
 ## Step 2 · Explore the code
 
 - Read only the files that the issue touches. Do not do a full code review.
-- Read `agent-ws/ai-best-practices.md` if the issue touches the agent or LLM calls.
+- Read `agent-ws/ai-best-practices.md` if the issue touches an agent or LLM calls.
 - Read the mockup in `agent-ws/git-NNN/` (`NNN` is the issue number with three digits).
   Read `index.html`, `styles.css`, `mockup.js`, and the preview screenshots if they exist.
 - List the screens, controls, states, and sample data that the mockup shows.

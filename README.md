@@ -62,6 +62,7 @@ The bootstrap script targets `theragenx-local-dev-authentik-server` explicitly.
 
 - A responsive workspace with light and dark themes.
 - Private notes with SQLAlchemy 2 and Alembic migrations.
+- A work portfolio. The AI extracts the key fields of an experience, finds possible duplicates, and improves the text on request.
 - OIDC sessions and CSRF protection for all API mutations.
 
 OIDC tokens and the client secret stay on the server.
@@ -92,7 +93,8 @@ Read [Separate application instances](agent-ws/multi-instance-support.md) before
 
 Logs and the local database reside in `.runtime/`.
 Notes persist after a restart.
-No feature uses the Azure model settings at this time. The workspace and notes work without them.
+The portfolio uses the Azure model settings for analysis and improvement.
+Without them, the workspace and notes work, and **Analyze** in the portfolio is not available.
 
 Startup reads three fields from the INI file's `_secrets` section:
 `azure_openai_endpoint`, `default_openai_model`, and `azure_openai_api_key`.
@@ -115,8 +117,9 @@ npm run test:e2e
 ```
 
 Server tests cover OIDC identity, CSRF checks, note privacy, validation, migrations, and missing-key errors.
+Portfolio tests use a scripted model to verify extraction, improvement, duplicate search, and owner boundaries.
 UI tests cover the API client and authentication errors.
-Browser tests cover desktop and mobile layouts, themes, notes, and logout.
+Browser tests cover desktop and mobile layouts, themes, notes, the portfolio flow, and logout.
 Browser fixtures simulate the API and do not require an Azure key.
 
 ## Project structure

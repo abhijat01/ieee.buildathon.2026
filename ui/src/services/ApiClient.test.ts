@@ -1,5 +1,5 @@
 import { afterEach, expect, test, vi } from 'vitest';
-import { ApiClient, AuthenticationRequired } from './ApiClient';
+import { ApiClient, ApiError, AuthenticationRequired } from './ApiClient';
 afterEach(() => vi.unstubAllGlobals());
 class ApiFixture {
   static async client() {
@@ -26,4 +26,38 @@ test('expired authentication and server errors remain distinct', async () => {
 });
 test('calls before sign-in require authentication', () => {
   expect(() => new ApiClient().headers()).toThrow(AuthenticationRequired);
+});
+test('portfolio calls send typed bodies and the CSRF header', async () => {
+  const { api, fetch } = await ApiFixture.client();
+  const fields = { title: 'Atlas', type: 'PROJECT' as const, company: 'Acme', startDate: '2022-03', endDate: null, skills: ['Python'] };
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ fields, duplicates: [] })));
+  expect(await api.analyzeExperience('My text')).toEqual({ fields, duplicates: [] });
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ text: 'Better', note: 'Shorter.' })));
+  expect(await api.improveExperience('My text', 'Make it shorter')).toEqual({ text: 'Better', note: 'Shorter.' });
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ id: 'item', ...fields, text: 'Better', createdAt: '2026-10-09T10:00:00Z' })));
+  await api.savePortfolioItem({ ...fields, originalText: 'My text', finalText: 'Better' });
+  const calls = fetch.mock.calls.slice(1).map(([path, options]) => ({ path, body: JSON.parse(options.body), options }));
+  expect(calls.map(call => call.path)).toEqual(['/api/portfolio/analyze', '/api/portfolio/improve', '/api/portfolio']);
+  expect(calls[0].body).toEqual({ text: 'My text' });
+  expect(calls[1].body).toEqual({ text: 'My text', instruction: 'Make it shorter' });
+  expect(calls[2].body).toEqual({ ...fields, originalText: 'My text', finalText: 'Better' });
+  for (const call of calls) expect(call.options).toMatchObject({ method: 'POST', credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': 'token' } });
+});
+test('portfolio reads use the item identifier and the session cookie', async () => {
+  const { api, fetch } = await ApiFixture.client();
+  fetch.mockResolvedValueOnce(new Response('[]'));
+  expect(await api.portfolioItems()).toEqual([]);
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ id: 'a/b' })));
+  await api.portfolioItem('a/b');
+  expect(fetch.mock.calls[1]).toEqual(['/api/portfolio', { credentials: 'same-origin' }]);
+  expect(fetch.mock.calls[2][0]).toBe('/api/portfolio/a%2Fb');
+});
+test('a rejected portfolio call gives the server message, and expired authentication stays distinct', async () => {
+  const { api, fetch } = await ApiFixture.client();
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ message: 'The AI is not available at this time.' }), { status: 503 }));
+  await expect(api.analyzeExperience('text')).rejects.toMatchObject({ name: 'ApiError', message: 'The AI is not available at this time.' });
+  fetch.mockResolvedValueOnce(new Response('', { status: 500 }));
+  await expect(api.improveExperience('text', '')).rejects.toBeInstanceOf(ApiError);
+  fetch.mockResolvedValueOnce(new Response('', { status: 401 }));
+  await expect(api.analyzeExperience('text')).rejects.toBeInstanceOf(AuthenticationRequired);
 });

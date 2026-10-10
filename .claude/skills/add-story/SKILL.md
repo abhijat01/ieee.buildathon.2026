@@ -27,7 +27,7 @@ I read the related screens and server APIs.
 ---
 # ✅ Done · Explore the code
 - Found 3 related files.
-- The change touches the Resume Builder screen.
+- The change touches the home screen.
 ```
 
 **Final banner.** Write it at the end. Use a level-1 heading and a short list:

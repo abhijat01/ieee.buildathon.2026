@@ -4,7 +4,7 @@ class WorkspaceFixture {
   static async signedIn(page: Page) {
     const notes: object[] = [];
     await page.route('**/api/session', route => route.fulfill({ json: { name: 'Abhijat', email: 'abhijat@example.test',
-      csrfToken: 'test-csrf', csrfHeader: 'X-CSRF-TOKEN' } }));
+      csrfToken: 'test-csrf', csrfHeader: 'X-CSRF-TOKEN', aiAvailable: false } }));
     await page.route('**/api/notes', async route => {
       if (route.request().method() === 'POST') {
         const note = { id: '1', ...route.request().postDataJSON(), createdAt: new Date().toISOString() };
@@ -63,9 +63,10 @@ test('home keeps the center clear and the left navigation opens notes', async ({
   await expect(page.locator('.notes-section')).toHaveCount(0);
 });
 
-test('the workspace has no agent and no Resume Builder', async ({ page }) => {
+test('the menu has home, notes, and portfolio, and no agent', async ({ page }) => {
   await WorkspaceFixture.signedIn(page);
-  await expect(page.getByRole('navigation', { name: 'Workspace' }).getByRole('button')).toHaveCount(2);
+  await expect(page.getByRole('navigation', { name: 'Workspace' }).getByRole('button')).toHaveCount(3);
+  await expect(page.getByRole('button', { name: 'Portfolio', exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Resume Builder' })).toHaveCount(0);
   await expect(page.getByText('IEEEAgent')).toHaveCount(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);

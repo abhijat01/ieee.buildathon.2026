@@ -14,6 +14,7 @@ def test_session_returns_the_oidc_name_and_csrf_token(clients):
     assert body["csrfToken"]
     assert body["csrfHeader"] == "X-CSRF-TOKEN"
     assert "agentAvailable" not in body
+    assert body["aiAvailable"] is False
 
 
 def test_csrf_protects_mutations_and_logout(clients):
@@ -63,3 +64,15 @@ def test_login_redirects_to_the_identity_provider(clients, monkeypatch):
     assert "redirect_uri=http%3A%2F%2Flocalhost%3A5300%2Flogin%2Foauth2%2Fcode%2Fauthentik" in response.headers["location"]
     assert "IEEE02_SESSION=" in response.headers["set-cookie"]
     assert "HttpOnly" in response.headers["set-cookie"]
+
+
+def test_session_reports_the_ai_as_available_when_the_model_settings_exist(tmp_path):
+    from conftest import SignedInClient
+    from ieee.config import Settings
+    from ieee.database import Database
+    from ieee.main import Application
+    settings = Settings(database_url=f"sqlite:///{tmp_path}/ai.db", oidc_client_secret="test-secret",
+                        azure_openai_endpoint="https://example.test/openai/v1/",
+                        azure_openai_deployment="deployment", azure_openai_api_key="private-test-key")
+    clients = SignedInClient(Application(settings, Database(settings.database_url)))
+    assert clients.member().get("/api/session").json()["aiAvailable"] is True

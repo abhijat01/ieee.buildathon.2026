@@ -5,6 +5,16 @@ from fastapi.responses import JSONResponse
 from ieee.config import Settings, settings
 from ieee.database import Database
 from ieee.azure_chat_client import AzureChatClientFactory
+from ieee.portfolio.duplicate_search_service import DuplicateSearchService
+from ieee.portfolio.experience_ai_error import ExperienceAiError
+from ieee.portfolio.experience_analysis_service import ExperienceAnalysisService
+from ieee.portfolio.experience_extractor import ExperienceExtractor
+from ieee.portfolio.experience_improver import ExperienceImprover
+from ieee.portfolio.extraction_instructions import ExtractionInstructions
+from ieee.portfolio.improvement_instructions import ImprovementInstructions
+from ieee.portfolio.portfolio_controller import PortfolioController
+from ieee.portfolio.portfolio_service import PortfolioService
+from ieee.portfolio.portfolio_validation_error import PortfolioValidationError
 from ieee.security.csrf import CsrfMiddleware
 from ieee.security.oidc_controller import OidcController
 from ieee.security.session_controller import SessionController
@@ -21,16 +31,25 @@ class Application:
         self.database = database or Database(config.database_url)
         self.models = AzureChatClientFactory(config)
         self.workspace = WorkspaceService(self.database)
+        self.portfolio = PortfolioService(self.database)
+        self.duplicates = DuplicateSearchService(self.database)
+        self.extractor = ExperienceExtractor(self.models, ExtractionInstructions())
+        self.improver = ExperienceImprover(self.models, ImprovementInstructions())
         self.sessions = SessionStore(config.session_timeout_seconds)
 
     def build(self) -> FastAPI:
         self.database.migrate()
         app = FastAPI(title="IEEE Workspace", docs_url=None, redoc_url=None, openapi_url=None)
-        for controller in (OidcController(self.settings), SessionController(), WorkspaceController(self.workspace)):
+        analysis = ExperienceAnalysisService(self.extractor, self.duplicates)
+        for controller in (OidcController(self.settings), SessionController(self.models.configured),
+                           WorkspaceController(self.workspace),
+                           PortfolioController(self.portfolio, analysis, self.improver)):
             app.include_router(controller.router)
         app.add_exception_handler(RequestValidationError, self._invalid_request)
         app.add_exception_handler(ValueError, self._invalid_request)
         app.add_exception_handler(HTTPException, self._http_error)
+        app.add_exception_handler(PortfolioValidationError, self._rule_error)
+        app.add_exception_handler(ExperienceAiError, self._ai_error)
         app.add_middleware(CsrfMiddleware)
         app.add_middleware(ServerSessionMiddleware, store=self.sessions,
                            cookie_name=self.settings.session_cookie_name, secure=self.settings.cookie_secure)
@@ -43,6 +62,14 @@ class Application:
     @staticmethod
     async def _http_error(request: Request, exception: HTTPException) -> JSONResponse:
         return JSONResponse({"message": exception.detail}, status_code=exception.status_code)
+
+    @staticmethod
+    async def _rule_error(request: Request, exception: PortfolioValidationError) -> JSONResponse:
+        return JSONResponse({"message": str(exception)}, status_code=400)
+
+    @staticmethod
+    async def _ai_error(request: Request, exception: ExperienceAiError) -> JSONResponse:
+        return JSONResponse({"message": ExperienceAiError.MESSAGE}, status_code=503)
 
 
 def create_app() -> FastAPI:

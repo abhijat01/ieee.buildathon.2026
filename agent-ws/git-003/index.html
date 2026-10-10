@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Mockup · Resume · Issue #3</title>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="mockup-bar" role="note">
+    <span class="mockup-tag">MOCKUP</span>
+    <span class="mockup-text">Issue #3 · Build a resume for a job description with AI help · Sample data only</span>
+    <span class="mockup-states">
+      <button type="button" data-action="toggle-empty" aria-pressed="false">Empty portfolio</button>
+      <button type="button" data-action="toggle-error" aria-pressed="false">AI error</button>
+    </span>
+  </div>
+
+  <div class="app-shell">
+    <header class="topbar">
+      <a class="brand" href="#" data-action="restart"><span class="brand-mark">i</span><strong>IEEE<span>workspace</span></strong></a>
+      <span class="topbar-divider"></span>
+      <span class="workspace-caption">Personal workspace</span>
+      <div class="account-actions">
+        <div class="theme-switch" role="group" aria-label="Color theme">
+          <button type="button" aria-label="Light theme" data-action="theme" data-theme-value="light"><i data-icon="sun" data-size="16"></i></button>
+          <button type="button" aria-label="Dark theme" data-action="theme" data-theme-value="dark"><i data-icon="moon" data-size="16"></i></button>
+        </div>
+        <span class="account-divider"></span>
+        <div class="account" aria-label="Abhijat" title="Abhijat">
+          <span class="avatar">A</span>
+          <div><strong>Abhijat</strong><span>Personal account</span></div>
+        </div>
+        <button type="button" class="icon-button" aria-label="Log out" title="Log out"><i data-icon="logout" data-size="18"></i></button>
+      </div>
+    </header>
+
+    <div class="body-layout">
+      <nav class="rail" aria-label="Workspace">
+        <div class="rail-top">
+          <button type="button" class="rail-button" aria-label="Workspace home" title="Workspace home"><i data-icon="grid" data-size="21"></i></button>
+          <button type="button" class="rail-button" aria-label="Go to notes" title="Notes"><i data-icon="file" data-size="21"></i></button>
+          <button type="button" class="rail-button" aria-label="Portfolio" title="Portfolio"><i data-icon="briefcase" data-size="21"></i></button>
+          <button type="button" class="rail-button active" aria-label="Resume" aria-current="page" title="Resume" data-action="restart"><i data-icon="scroll" data-size="21"></i></button>
+        </div>
+        <span class="rail-bottom"><i data-icon="shield" data-size="19"></i></span>
+      </nav>
+
+      <main class="workspace-main">
+        <div id="view"></div>
+        <footer class="workspace-footer">
+          <span><i data-icon="shield" data-size="13"></i> Personal workspace</span><span>IEEE Workspace</span>
+        </footer>
+      </main>
+    </div>
+  </div>
+
+  <script src="mockup.js"></script>
+</body>
+</html>
