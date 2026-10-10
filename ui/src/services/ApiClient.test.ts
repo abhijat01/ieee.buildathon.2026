@@ -61,3 +61,18 @@ test('a rejected portfolio call gives the server message, and expired authentica
   fetch.mockResolvedValueOnce(new Response('', { status: 401 }));
   await expect(api.analyzeExperience('text')).rejects.toBeInstanceOf(AuthenticationRequired);
 });
+test('updatePortfolioItem sends PUT with the item identifier, the changed values, and the CSRF header', async () => {
+  const { api, fetch } = await ApiFixture.client();
+  const update = { title: 'Atlas', type: 'WORK' as const, company: null, startDate: '2022-03', endDate: null, skills: ['Python'], finalText: 'Better' };
+  const saved = { id: 'a/b', ...update, text: 'Better', createdAt: '2026-09-12T10:00:00Z', updatedAt: '2026-10-10T10:00:00Z' };
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify(saved)));
+  expect(await api.updatePortfolioItem('a/b', update)).toEqual(saved);
+  const [path, options] = fetch.mock.calls[1];
+  expect(path).toBe('/api/portfolio/a%2Fb');
+  expect(options).toMatchObject({ method: 'PUT', credentials: 'same-origin', headers: { 'X-CSRF-TOKEN': 'token' } });
+  expect(JSON.parse(options.body)).toEqual(update);
+  fetch.mockResolvedValueOnce(new Response(JSON.stringify({ message: 'Add a title before you save.' }), { status: 400 }));
+  await expect(api.updatePortfolioItem('a1', update)).rejects.toMatchObject({ name: 'ApiError', message: 'Add a title before you save.' });
+  fetch.mockResolvedValueOnce(new Response('', { status: 401 }));
+  await expect(api.updatePortfolioItem('a1', update)).rejects.toBeInstanceOf(AuthenticationRequired);
+});

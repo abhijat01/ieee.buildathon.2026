@@ -14,3 +14,4 @@ class PortfolioItemView(ApiModel):
     skills: list[str]
     text: str
     created_at: datetime
+    updated_at: datetime

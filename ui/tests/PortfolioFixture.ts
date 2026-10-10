@@ -1,7 +1,7 @@
 import { expect, type Page, type Route } from '@playwright/test';
 
 interface Item { id: string; type: string; title: string; company: string | null; startDate: string | null; endDate: string | null;
-  skills: string[]; text: string; createdAt: string }
+  skills: string[]; text: string; createdAt: string; updatedAt: string }
 interface Options { items?: Item[]; aiAvailable?: boolean }
 
 /** Simulates the portfolio API in the browser. Tests change the public fields to select a server behavior. */
@@ -21,7 +21,7 @@ export class PortfolioFixture {
         skills: ['Python', 'Airflow'], text: 'A nightly pipeline that moves sales data into the warehouse.', createdAt: '2026-08-30T10:00:00Z' },
       { id: 'a3', type: 'WORK', title: 'Senior Software Engineer', company: 'Northwind Labs', startDate: '2019-01', endDate: '2021-05',
         skills: ['Java', 'Kubernetes', 'Mentoring'], text: 'I worked in the platform team at **Northwind Labs**.', createdAt: '2026-08-30T09:00:00Z' },
-    ];
+    ].map(item => ({ ...item, updatedAt: item.createdAt }));
   }
 
   items: Item[];
@@ -29,6 +29,9 @@ export class PortfolioFixture {
   failAi = false;
   saveError: string | null = null;
   saves: Record<string, unknown>[] = [];
+  updateError: string | null = null;
+  /** The bodies of the `PUT` requests, each with the item identifier of its path. */
+  updates: Record<string, unknown>[] = [];
   analyzed: string[] = [];
   instructions: string[] = [];
   private release: () => void = () => undefined;
@@ -98,15 +101,28 @@ export class PortfolioFixture {
     expect(route.request().headers()['x-csrf-token']).toBe('test-csrf');
     this.saves.push(body);
     const item: Item = { id: `new-${this.saves.length}`, type: body.type, title: body.title, company: body.company, startDate: body.startDate,
-      endDate: body.endDate, skills: body.skills, text: body.finalText, createdAt: new Date().toISOString() };
+      endDate: body.endDate, skills: body.skills, text: body.finalText, createdAt: new Date().toISOString(), updatedAt: new Date().toISOString() };
     this.items = [item, ...this.items];
     return route.fulfill({ json: item });
   }
 
   private item(route: Route): Promise<void> {
     const id = new URL(route.request().url()).pathname.split('/').pop();
-    if (id === 'analyze' || id === 'improve') return route.fallback();
+    if (id === 'analyze' || id === 'improve' || id === 'assistant') return route.fallback();
     const item = this.items.find(entry => entry.id === id);
-    return item ? route.fulfill({ json: item }) : route.fulfill({ status: 404, json: { message: 'The portfolio item does not exist.' } });
+    if (!item) return route.fulfill({ status: 404, json: { message: 'The portfolio item does not exist.' } });
+    return route.request().method() === 'PUT' ? this.update(route, item) : route.fulfill({ json: item });
+  }
+
+  /** Simulates `PUT /api/portfolio/{id}`: it replaces the fields and the text, and sets the date of the change. */
+  private update(route: Route, item: Item): Promise<void> {
+    if (this.updateError) return route.fulfill({ status: 400, json: { message: this.updateError } });
+    const body = route.request().postDataJSON();
+    expect(route.request().headers()['x-csrf-token']).toBe('test-csrf');
+    this.updates.push({ id: item.id, ...body });
+    const updated: Item = { ...item, type: body.type, title: body.title, company: body.company, startDate: body.startDate, endDate: body.endDate,
+      skills: body.skills, text: body.finalText, updatedAt: new Date().toISOString() };
+    this.items = this.items.map(entry => entry.id === item.id ? updated : entry);
+    return route.fulfill({ json: updated });
   }
 }

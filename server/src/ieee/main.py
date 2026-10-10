@@ -5,6 +5,12 @@ from fastapi.responses import JSONResponse
 from ieee.config import Settings, settings
 from ieee.database import Database
 from ieee.azure_chat_client import AzureChatClientFactory
+from ieee.portfolio.assistant.assistant_tools import AssistantTools
+from ieee.portfolio.assistant.member_thread_store import MemberThreadStore
+from ieee.portfolio.assistant.portfolio_assistant_controller import PortfolioAssistantController
+from ieee.portfolio.assistant.portfolio_assistant_factory import PortfolioAssistantFactory
+from ieee.portfolio.assistant.portfolio_assistant_instructions import PortfolioAssistantInstructions
+from ieee.portfolio.assistant.portfolio_assistant_service import PortfolioAssistantService
 from ieee.portfolio.duplicate_search_service import DuplicateSearchService
 from ieee.portfolio.experience_ai_error import ExperienceAiError
 from ieee.portfolio.experience_analysis_service import ExperienceAnalysisService
@@ -35,6 +41,9 @@ class Application:
         self.duplicates = DuplicateSearchService(self.database)
         self.extractor = ExperienceExtractor(self.models, ExtractionInstructions())
         self.improver = ExperienceImprover(self.models, ImprovementInstructions())
+        self.assistant = PortfolioAssistantService(
+            self.portfolio, self.models, PortfolioAssistantFactory(PortfolioAssistantInstructions()),
+            AssistantTools(), MemberThreadStore())
         self.sessions = SessionStore(config.session_timeout_seconds)
 
     def build(self) -> FastAPI:
@@ -43,7 +52,8 @@ class Application:
         analysis = ExperienceAnalysisService(self.extractor, self.duplicates)
         for controller in (OidcController(self.settings), SessionController(self.models.configured),
                            WorkspaceController(self.workspace),
-                           PortfolioController(self.portfolio, analysis, self.improver)):
+                           PortfolioController(self.portfolio, analysis, self.improver),
+                           PortfolioAssistantController(self.assistant)):
             app.include_router(controller.router)
         app.add_exception_handler(RequestValidationError, self._invalid_request)
         app.add_exception_handler(ValueError, self._invalid_request)
@@ -53,6 +63,7 @@ class Application:
         app.add_middleware(CsrfMiddleware)
         app.add_middleware(ServerSessionMiddleware, store=self.sessions,
                            cookie_name=self.settings.session_cookie_name, secure=self.settings.cookie_secure)
+        app.router.on_shutdown.append(self.assistant.close)
         return app
 
     @staticmethod

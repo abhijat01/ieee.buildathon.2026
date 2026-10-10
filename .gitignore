@@ -9,6 +9,7 @@
 ui/dist/
 ui/test-results/
 ui/playwright-report/
+ui/playwright.local.config.ts
 __pycache__/
 *.egg-info/
 *.tsbuildinfo

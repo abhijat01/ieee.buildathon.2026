@@ -9,7 +9,10 @@ from ieee.portfolio.portfolio_item_not_found import PortfolioItemNotFound
 from ieee.portfolio.portfolio_item_view import PortfolioItemView
 from ieee.portfolio.portfolio_service import PortfolioService
 from ieee.portfolio.save_item_request import SaveItemRequest
+from ieee.portfolio.update_item_request import UpdateItemRequest
 from ieee.security.authenticated_user import AuthenticatedUser, current_user
+
+NOT_FOUND_MESSAGE = "The portfolio item does not exist."
 
 
 class PortfolioController:
@@ -25,6 +28,7 @@ class PortfolioController:
         self.router.add_api_route("/analyze", self.analyze, methods=["POST"], response_model=AnalysisView)
         self.router.add_api_route("/improve", self.improve, methods=["POST"], response_model=ImprovedText)
         self.router.add_api_route("/{item_id}", self.get, methods=["GET"], response_model=PortfolioItemView)
+        self.router.add_api_route("/{item_id}", self.update, methods=["PUT"], response_model=PortfolioItemView)
 
     def list(self, user: AuthenticatedUser = Depends(current_user)) -> list[PortfolioItemView]:
         return self.portfolio.list_items(user.subject)
@@ -33,10 +37,17 @@ class PortfolioController:
         try:
             return self.portfolio.get_item(user.subject, item_id)
         except PortfolioItemNotFound:
-            raise HTTPException(status.HTTP_404_NOT_FOUND, "The portfolio item does not exist.") from None
+            raise HTTPException(status.HTTP_404_NOT_FOUND, NOT_FOUND_MESSAGE) from None
 
     def save(self, request: SaveItemRequest, user: AuthenticatedUser = Depends(current_user)) -> PortfolioItemView:
         return self.portfolio.save_item(user.subject, request)
+
+    def update(self, item_id: str, request: UpdateItemRequest,
+               user: AuthenticatedUser = Depends(current_user)) -> PortfolioItemView:
+        try:
+            return self.portfolio.update_item(user.subject, item_id, request)
+        except PortfolioItemNotFound:
+            raise HTTPException(status.HTTP_404_NOT_FOUND, NOT_FOUND_MESSAGE) from None
 
     async def analyze(self, request: AnalyzeRequest, user: AuthenticatedUser = Depends(current_user)) -> AnalysisView:
         return await self.analysis.analyze(user.subject, request.text)

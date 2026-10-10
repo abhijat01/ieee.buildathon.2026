@@ -21,7 +21,8 @@ export interface DuplicateMatch { id: string; title: string; company: string | n
 export interface Analysis { fields: ExtractedFields; duplicates: DuplicateMatch[] }
 export interface ImprovedText { text: string; note: string }
 export interface SavePortfolioItem extends ExtractedFields { originalText: string; finalText: string }
-export interface PortfolioItem extends ExtractedFields { id: string; text: string; createdAt: string }
+export interface UpdatePortfolioItem extends ExtractedFields { finalText: string }
+export interface PortfolioItem extends ExtractedFields { id: string; text: string; createdAt: string; updatedAt: string }
 
 export class ApiClient {
   private session: Session | null = null;
@@ -66,9 +67,14 @@ export class ApiClient {
 
   savePortfolioItem(item: SavePortfolioItem): Promise<PortfolioItem> { return this.post('/api/portfolio', item); }
 
+  /** Replaces the fields and the text of a saved item. The server keeps the original text. */
+  updatePortfolioItem(id: string, item: UpdatePortfolioItem): Promise<PortfolioItem> {
+    return this.post(`/api/portfolio/${encodeURIComponent(id)}`, item, 'PUT');
+  }
+
   /** Sends a portfolio request. A rejected request gives an ApiError with the server message. */
-  private async post<T>(path: string, body: object): Promise<T> {
-    const response = await fetch(path, { method: 'POST', credentials: 'same-origin', headers: this.headers(), body: JSON.stringify(body) });
+  private async post<T>(path: string, body: object, method: 'POST' | 'PUT' = 'POST'): Promise<T> {
+    const response = await fetch(path, { method, credentials: 'same-origin', headers: this.headers(), body: JSON.stringify(body) });
     if (response.status === 401 || response.status === 403) await this.check(response);
     if (!response.ok) {
       const error = await response.json().catch(() => ({})) as { message?: string };

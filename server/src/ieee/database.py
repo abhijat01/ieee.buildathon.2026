@@ -20,7 +20,7 @@ class Database:
     def session(self) -> Session:
         return self.sessions()
 
-    def migrate(self) -> None:
+    def migrate(self, revision: str = "head") -> None:
         from alembic import command
         from alembic.config import Config
         root = Path(__file__).resolve().parent / "migrations"
@@ -29,4 +29,4 @@ class Database:
         config.attributes["connection_url"] = self.url
         with self.engine.begin() as connection:
             config.attributes["connection"] = connection
-            command.upgrade(config, "head")
+            command.upgrade(config, revision)

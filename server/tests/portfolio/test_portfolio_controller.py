@@ -2,7 +2,9 @@ import pytest
 from conftest import SignedInClient
 from ieee.database import Database
 from ieee.main import Application
+from sqlalchemy import select
 from ieee.portfolio.experience_ai_error import ExperienceAiError
+from ieee.portfolio.portfolio_item import PortfolioItem
 from .fake_experience_ai import FakeExtractor, FakeImprover
 from .portfolio_samples import ORIGINAL
 
@@ -53,7 +55,8 @@ def test_only_save_stores_an_item_and_analyze_then_reports_the_duplicate(ai_clie
     member = ai_clients.member()
     saved = member.post("/api/portfolio", json=ITEM)
     assert saved.status_code == 200
-    assert set(saved.json()) == {"id", "type", "title", "company", "startDate", "endDate", "skills", "text", "createdAt"}
+    assert set(saved.json()) == {"id", "type", "title", "company", "startDate", "endDate", "skills", "text", "createdAt",
+                                 "updatedAt"}
     assert [item["id"] for item in member.get("/api/portfolio").json()] == [saved.json()["id"]]
     duplicates = member.post("/api/portfolio/analyze", json={"text": ORIGINAL}).json()["duplicates"]
     assert [(match["id"], match["level"]) for match in duplicates] == [(saved.json()["id"], "VERY_SIMILAR")]
@@ -105,3 +108,66 @@ def test_missing_model_settings_return_503_and_never_the_cause(clients):
         assert response.status_code == 503
         assert response.json() == {"message": ExperienceAiError.MESSAGE}
         assert "Azure" not in response.text
+
+
+UPDATE = {"type": "WORK", "title": "Atlas for the sales team", "company": "Acme Corporation", "startDate": "2022-04",
+          "endDate": "2023-07", "skills": ["Python", "Kubernetes"], "finalText": "Led the build of Atlas."}
+
+
+def test_put_changes_the_item_and_returns_the_date_of_the_change(ai_clients):
+    member = ai_clients.member()
+    saved = member.post("/api/portfolio", json=ITEM).json()
+    response = member.put(f"/api/portfolio/{saved['id']}", json=UPDATE)
+    assert response.status_code == 200
+    updated = response.json()
+    assert updated == {"id": saved["id"], "type": "WORK", "title": "Atlas for the sales team",
+                       "company": "Acme Corporation", "startDate": "2022-04", "endDate": "2023-07",
+                       "skills": ["Python", "Kubernetes"], "text": "Led the build of Atlas.",
+                       "createdAt": saved["createdAt"], "updatedAt": updated["updatedAt"]}
+    assert updated["updatedAt"] > saved["updatedAt"]
+    assert member.get(f"/api/portfolio/{saved['id']}").json() == updated
+
+
+def test_put_needs_a_session_and_the_csrf_token(ai_clients):
+    item_id = ai_clients.member().post("/api/portfolio", json=ITEM).json()["id"]
+    assert ai_clients.anonymous().put(f"/api/portfolio/{item_id}", json=UPDATE).status_code == 401
+    assert ai_clients.member(with_csrf=False).put(f"/api/portfolio/{item_id}", json=UPDATE).status_code == 403
+    assert ai_clients.member().get(f"/api/portfolio/{item_id}").json()["title"] == ITEM["title"]
+
+
+def test_put_returns_404_for_the_item_of_another_member_and_for_an_unknown_item(ai_clients):
+    item_id = ai_clients.member(subject="owner").post("/api/portfolio", json=ITEM).json()["id"]
+    other = ai_clients.member(subject="other-member")
+    response = other.put(f"/api/portfolio/{item_id}", json=UPDATE)
+    assert response.status_code == 404
+    assert response.json() == {"message": "The portfolio item does not exist."}
+    assert other.put("/api/portfolio/unknown-id", json=UPDATE).status_code == 404
+    assert ai_clients.member(subject="owner").get(f"/api/portfolio/{item_id}").json()["title"] == ITEM["title"]
+
+
+@pytest.mark.parametrize("changes, message", [
+    ({"title": "  "}, "Add a title before you save."),
+    ({"skills": [f"skill {number}" for number in range(21)]},
+     "Keep at most 20 skills. Remove some skills, then save again."),
+    ({"startDate": "March 2022"}, "Use the date format YYYY, YYYY-MM, or YYYY-MM-DD."),
+])
+def test_put_returns_the_rule_message_for_the_member(ai_clients, changes, message):
+    member = ai_clients.member()
+    item_id = member.post("/api/portfolio", json=ITEM).json()["id"]
+    response = member.put(f"/api/portfolio/{item_id}", json={**UPDATE, **changes})
+    assert response.status_code == 400
+    assert response.json() == {"message": message}
+    assert member.get(f"/api/portfolio/{item_id}").json()["title"] == ITEM["title"]
+
+
+def test_put_ignores_the_original_text_the_owner_and_the_id_in_the_body(ai_clients):
+    owner = ai_clients.member(subject="owner")
+    saved = owner.post("/api/portfolio", json=ITEM).json()
+    body = {**UPDATE, "originalText": "A new original text.", "ownerId": "other-member", "id": "other-id"}
+    updated = owner.put(f"/api/portfolio/{saved['id']}", json=body)
+    assert updated.status_code == 200 and updated.json()["id"] == saved["id"]
+    assert [item["id"] for item in owner.get("/api/portfolio").json()] == [saved["id"]]
+    assert ai_clients.member(subject="other-member").get("/api/portfolio").json() == []
+    with ai_clients.application.database.session() as session:
+        stored = session.scalars(select(PortfolioItem)).one()
+    assert (stored.id, stored.owner_id, stored.original_text) == (saved["id"], "owner", ORIGINAL)

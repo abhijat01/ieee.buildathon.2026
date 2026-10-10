@@ -2,13 +2,19 @@ import { Component, type FormEvent } from 'react';
 import { ArrowRight, BookOpen, Briefcase, Check, FileText, LayoutGrid, LogOut, Moon, Plus, ShieldCheck, Sparkles, Sun, X } from 'lucide-react';
 import { ApiClient, AuthenticationRequired, type Note, type Session } from '../services/ApiClient';
 import { ThemeService, type Theme } from '../services/ThemeService';
+import { UnsavedChangesGuard } from '../services/UnsavedChangesGuard';
+import { DiscardDialog } from './DiscardDialog';
 import { PortfolioScreen } from './PortfolioScreen';
 
+type View = 'home' | 'notes' | 'portfolio';
 interface State { session: Session | null; loading: boolean; theme: Theme; notes: Note[]; error: string | null;
-  view: 'home' | 'notes' | 'portfolio'; noteOpen: boolean; title: string; body: string; saving: boolean }
+  view: View; noteOpen: boolean; title: string; body: string; saving: boolean; leaveOpen: boolean }
 
 export class App extends Component<object, State> {
   private api = new ApiClient();
+  /** Asks the member before a navigation removes a form with unsaved changes. */
+  private guard = new UnsavedChangesGuard(open => this.setState({ leaveOpen: open }));
+  private go = (view: View): void => this.guard.leave(() => this.setState({ view }));
   private noteTrigger: HTMLElement | null = null;
   private openNote = (): void => {
     this.noteTrigger = document.activeElement as HTMLElement;
@@ -18,7 +24,7 @@ export class App extends Component<object, State> {
     if (!this.state.saving) this.setState({ noteOpen: false }, () => this.noteTrigger?.focus());
   };
   state: State = { session: null, loading: true, theme: ThemeService.current(), notes: [], error: null,
-    view: 'home', noteOpen: false, title: '', body: '', saving: false };
+    view: 'home', noteOpen: false, title: '', body: '', saving: false, leaveOpen: false };
 
   componentDidMount(): void { ThemeService.apply(this.state.theme); void this.load(); }
   private load = async (): Promise<void> => {
@@ -52,16 +58,17 @@ export class App extends Component<object, State> {
       <header className="topbar"><a className="brand" href="/"><span className="brand-mark">i</span><strong>IEEE<span>workspace</span></strong></a><span className="topbar-divider"/><span className="workspace-caption">Personal workspace</span>
         <div className="account-actions">{this.themeSwitch()}<span className="account-divider"/><div className="account" aria-label={session.name} title={session.name}><span className="avatar">{session.name.split(' ').slice(0,2).map(name => name[0]).join('')}</span><div><strong>{session.name}</strong><span>Personal account</span></div></div>
           <button className="icon-button" aria-label="Log out" title="Log out" onClick={() => this.api.logout()}><LogOut size={18}/></button></div></header>
-      <div className="body-layout"><nav className="rail" aria-label="Workspace"><div className="rail-top"><button className={this.state.view === 'home' ? 'rail-button active' : 'rail-button'} aria-label="Workspace home" aria-current={this.state.view === 'home' ? 'page' : undefined} onClick={() => this.setState({ view: 'home' })}><LayoutGrid size={21}/></button><button className={this.state.view === 'notes' ? 'rail-button active' : 'rail-button'} aria-label="Go to notes" aria-current={this.state.view === 'notes' ? 'page' : undefined} onClick={() => this.setState({ view: 'notes' })}><FileText size={21}/></button><button className={this.state.view === 'portfolio' ? 'rail-button active' : 'rail-button'} aria-label="Portfolio" title="Portfolio" aria-current={this.state.view === 'portfolio' ? 'page' : undefined} onClick={() => this.setState({ view: 'portfolio' })}><Briefcase size={21}/></button></div><span className="rail-bottom"><ShieldCheck size={19}/></span></nav>
+      <div className="body-layout"><nav className="rail" aria-label="Workspace"><div className="rail-top"><button className={this.state.view === 'home' ? 'rail-button active' : 'rail-button'} aria-label="Workspace home" aria-current={this.state.view === 'home' ? 'page' : undefined} onClick={() => this.go('home')}><LayoutGrid size={21}/></button><button className={this.state.view === 'notes' ? 'rail-button active' : 'rail-button'} aria-label="Go to notes" aria-current={this.state.view === 'notes' ? 'page' : undefined} onClick={() => this.go('notes')}><FileText size={21}/></button><button className={this.state.view === 'portfolio' ? 'rail-button active' : 'rail-button'} aria-label="Portfolio" title="Portfolio" aria-current={this.state.view === 'portfolio' ? 'page' : undefined} onClick={() => this.go('portfolio')}><Briefcase size={21}/></button></div><span className="rail-bottom"><ShieldCheck size={19}/></span></nav>
       <main className="workspace-main workspace-empty">{this.state.view !== 'portfolio' && <><div className="breadcrumb"><LayoutGrid size={13}/> Workspace <span>/</span><strong>{this.state.view === 'home' ? 'Overview' : 'Notes'}</strong></div>
         <div className="page-title"><h1>{this.state.view === 'home' ? 'Workspace' : 'Notes'}</h1><span className="date-label">{new Intl.DateTimeFormat('en', { month: 'short', day: 'numeric', weekday: 'short' }).format(new Date())}</span></div></>}
         {error && <div className="error-banner" role="alert">{error}<button aria-label="Dismiss error" className="icon-button" onClick={() => this.setState({ error: null })}><X size={16}/></button></div>}
         {this.state.view === 'home' && <div className="workspace-canvas" aria-label="Application content"/>}
         {this.state.view === 'notes' && <section id="notes" className="notes-section"><div className="section-title"><h2>Your notes <span className="count-badge">{notes.length}</span></h2><button className="text-button" onClick={this.openNote}><Plus size={15}/> New note</button></div>
         {notes.length ? <div className="notes-grid">{notes.map(note => <article className="note-card" key={note.id}><FileText size={17}/><h3>{note.title}</h3><p>{note.body}</p><time dateTime={note.createdAt}>{new Date(note.createdAt).toLocaleDateString('en', { month: 'short', day: 'numeric' })}</time></article>)}</div> : <div className="notes-empty"><span className="empty-icon"><BookOpen size={23}/></span><div><h3>A blank page is a good beginning.</h3><p>Save a thought here and return to it later.</p></div><button className="outline-button" onClick={this.openNote}><Plus size={15}/> Your first note</button></div>}</section>}
-        {this.state.view === 'portfolio' && <PortfolioScreen api={this.api} aiAvailable={session.aiAvailable} onAuthExpired={() => this.setState({ session: null })}/>}
+        {this.state.view === 'portfolio' && <PortfolioScreen api={this.api} aiAvailable={session.aiAvailable} guard={this.guard} onAuthExpired={() => this.setState({ session: null })}/>}
         <footer className="workspace-footer"><span><ShieldCheck size={13}/> Personal workspace</span><span>IEEE Workspace</span></footer>
       </main></div>
+      {this.state.leaveOpen && <DiscardDialog reason="leave" onKeep={() => this.guard.cancel()} onDiscard={() => this.guard.confirm()}/>}
       {noteOpen && <div className="modal-backdrop" onClick={event => { if (event.target === event.currentTarget) this.closeNote(); }}><section className="note-dialog" role="dialog" aria-modal="true" aria-labelledby="note-title" onKeyDown={event => {
         if (event.key === 'Escape') this.closeNote();
         if (event.key === 'Tab') {

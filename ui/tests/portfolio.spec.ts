@@ -57,10 +57,12 @@ test('a duplicate link opens the existing entry, and Back to your draft keeps th
   await portfolio.analyzeNow();
   await page.getByLabel('Title').fill('Atlas for sales');
   await page.getByRole('button', { name: /Atlas reporting dashboard/ }).click();
-  await expect(page.getByRole('heading', { name: 'Atlas reporting dashboard', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Edit experience', level: 1 })).toBeVisible();
+  await expect(page.locator('.breadcrumb')).toContainText('Atlas reporting dashboard');
   await expect(page.getByText('Your new experience is not saved yet.')).toBeVisible();
-  await expect(page.locator('.detail-fields')).toContainText('Acme Corp');
-  await expect(page.locator('.detail-fields')).toContainText('Mar 2022');
+  await expect(page.getByLabel('Title')).toHaveValue('Atlas reporting dashboard');
+  await expect(page.getByLabel('Company')).toHaveValue('Acme Corp');
+  await expect(page.getByLabel('Start date')).toHaveValue('2022-03');
   await portfolio.expectNoOverflow();
   await page.getByRole('button', { name: 'Back to your draft' }).click();
   await expect(page.getByLabel('Title')).toHaveValue('Atlas for sales');
@@ -68,6 +70,23 @@ test('a duplicate link opens the existing entry, and Back to your draft keeps th
   await page.getByRole('button', { name: /Sales data pipeline/ }).click();
   await page.locator('.breadcrumb').getByRole('button', { name: 'Portfolio' }).click();
   await expect(page.getByLabel('Title')).toHaveValue('Atlas for sales');
+});
+
+test('Back to your draft asks before it removes unsaved changes of the open entry', async ({ page }) => {
+  const portfolio = await PortfolioFixture.open(page);
+  await portfolio.analyzeNow();
+  await page.getByLabel('Title').fill('Atlas for sales');
+  await page.getByRole('button', { name: /Sales data pipeline/ }).click();
+  await page.getByLabel('Company').fill('Acme Corporation');
+  await page.getByRole('button', { name: 'Back to your draft' }).click();
+  await expect(page.getByRole('dialog', { name: 'Discard your changes?' })).toContainText('You have unsaved changes.');
+  await page.getByRole('button', { name: 'Keep editing' }).click();
+  await expect(page.getByLabel('Company')).toHaveValue('Acme Corporation');
+  await page.locator('.breadcrumb').getByRole('button', { name: 'Portfolio' }).click();
+  await page.getByRole('button', { name: 'Discard changes' }).click();
+  await expect(page.getByLabel('Title')).toHaveValue('Atlas for sales');
+  await expect(page.getByRole('status', { name: 'Possible duplicates' })).toBeVisible();
+  expect(portfolio.updates).toEqual([]);
 });
 
 test('improve shows the AI at work and an error, and the member can try again, keep, accept, and restore', async ({ page }) => {
@@ -117,7 +136,7 @@ test('improve shows the AI at work and an error, and the member can try again, k
   expect(portfolio.saves[0]).toMatchObject({ originalText: PortfolioFixture.original, finalText: PortfolioFixture.original });
 });
 
-test('the saved message can be dismissed, and a card opens the item with All experiences', async ({ page }) => {
+test('the saved message can be dismissed, and a card opens the edit screen of the item', async ({ page }) => {
   const portfolio = await PortfolioFixture.open(page, { items: [] });
   await portfolio.analyzeNow();
   await page.getByRole('button', { name: 'Approve & save' }).click();
@@ -125,10 +144,13 @@ test('the saved message can be dismissed, and a card opens the item with All exp
   await page.getByRole('button', { name: 'Dismiss message' }).click();
   await expect(page.locator('.pf-card.is-new')).toHaveCount(0);
   await page.locator('.pf-card').click();
-  await expect(page.getByRole('heading', { name: 'Atlas analytics dashboard', level: 1 })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Edit experience', level: 1 })).toBeVisible();
+  await expect(page.getByLabel('Title')).toHaveValue('Atlas analytics dashboard');
   await expect(page.getByText('Your new experience is not saved yet.')).toHaveCount(0);
-  await page.getByRole('button', { name: 'All experiences' }).click();
+  await expect(page.getByRole('button', { name: 'All experiences' })).toHaveCount(0);
+  await page.locator('.breadcrumb').getByRole('button', { name: 'Portfolio' }).click();
   await expect(page.locator('.pf-card')).toHaveCount(1);
+  await expect(page.locator('.pf-card')).toContainText('Saved today');
 });
 
 test('a server rule error shows the server message and keeps the draft', async ({ page }) => {
