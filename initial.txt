@@ -1,0 +1,12 @@
+Create a simple server and UI app - it  should use OIDC for authenticaiton and 
+show a simple page with a right side pane showing a well designed AI Agent (call 
+it IEEEAgent) which should use Microsoft Agent Framework (Python) for building the agent. The agent 
+should use AGUI and use tools on both the server and the client side. Make sure 
+the application and tend pointes are protected using OIDC. Using authentic installed 
+on this sevrer . 
+
+Create a clean visual language for teh applciation that should 
+work across different devices. 
+
+System should show my name an dthe option to logout. It should also support 
+unified themes with light and dark being two options always available. 
