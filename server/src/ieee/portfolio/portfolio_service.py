@@ -36,6 +36,16 @@ class PortfolioService:
             raise PortfolioItemNotFound()
         return item.view()
 
+    def get_items(self, owner: str, item_ids: list[str]) -> list[PortfolioItemView]:
+        """Returns the items in the given order. Raises PortfolioItemNotFound if one is not an item of the owner."""
+        unique_ids = list(dict.fromkeys(item_ids))
+        with self.database.session() as session:
+            query = select(PortfolioItem).where(PortfolioItem.owner_id == owner, PortfolioItem.id.in_(unique_ids))
+            views = {item.id: item.view() for item in session.scalars(query)}
+        if len(views) != len(unique_ids):
+            raise PortfolioItemNotFound()
+        return [views[item_id] for item_id in unique_ids]
+
     def save_item(self, owner: str, request: SaveItemRequest) -> PortfolioItemView:
         content = self._checked(request)
         if not request.original_text.strip():

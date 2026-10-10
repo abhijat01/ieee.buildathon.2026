@@ -282,3 +282,73 @@
   .proposal-actions .small-button { flex: 1; justify-content: center; }
   .composer textarea { font-size: 16px; }
 }
+
+/* Resume builder (issue #3). The rules come from agent-ws/git-003/styles.css. */
+.pf-chips.rs-chips { margin-top: 0; }
+.rs-improved { margin-top: 16px; }
+.rs-copy-note { margin: 0 0 10px; }
+.rs-job h3 { font-size: 15px; font-weight: 700; }
+.rs-job .rs-company { font-size: 12px; color: var(--muted); margin-top: 4px; }
+.rs-label { font-size: 10px; font-weight: 700; letter-spacing: 1px; color: var(--muted); margin: 18px 0 8px; }
+.rs-requirements { margin: 0; padding-left: 18px; font-size: 12px; line-height: 1.7; }
+.rs-requirements li { margin: 3px 0; }
+.chip.ok { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-text); }
+.chip.warn { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-text); }
+.rs-items { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
+.rs-item { display: flex; gap: 12px; align-items: flex-start; border: 1px solid var(--line); border-radius: 10px; padding: 14px; background: var(--surface); overflow-wrap: anywhere; }
+.rs-item.is-included { border-color: color-mix(in srgb, var(--accent) 40%, var(--line)); }
+.rs-item.is-excluded .rs-item-body { opacity: .62; }
+.rs-item-body { flex: 1; min-width: 0; }
+.rs-item-top { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-bottom: 8px; }
+.rs-item h3 { font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.rs-reason { font-size: 12px; line-height: 1.6; margin-top: 8px; }
+.rs-item .pf-chips { margin-top: 10px; }
+.rel { font-size: 10px; font-weight: 600; padding: 4px 9px; border-radius: 20px; border: 1px solid var(--line); white-space: nowrap; }
+.rel.high { background: var(--ok-bg); border-color: var(--ok-line); color: var(--ok-text); }
+.rel.medium { background: var(--warn-bg); border-color: var(--warn-line); color: var(--warn-text); }
+.rel.low { background: var(--bg); color: var(--muted); }
+.switch-button { padding: 11px 3px; margin: -8px 0 -8px -3px; flex-shrink: 0; border-radius: 20px; }
+.switch { display: block; width: 38px; height: 22px; border-radius: 20px; background: #c5c8d0; position: relative; transition: background .15s; }
+.switch:after { content: ''; position: absolute; top: 3px; left: 3px; width: 16px; height: 16px; border-radius: 50%; background: #fff; box-shadow: 0 1px 3px #0003; transition: transform .15s; }
+[data-theme=dark] .switch { background: #454a59; }
+.switch-button[aria-checked=true] .switch { background: #7560bd; }
+.switch-button[aria-checked=true] .switch:after { transform: translateX(16px); }
+
+.resume-layout { display: grid; grid-template-columns: minmax(0, 7fr) minmax(0, 4fr); gap: 16px; align-items: start; }
+.resume-layout .panel + .panel { margin-top: 0; }
+.resume-tools { margin-left: auto; display: flex; flex-wrap: wrap; gap: 8px; }
+.resume-tools .primary-button, .resume-tools .outline-button { padding: 9px 13px; }
+.resume-paper { background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 24px 28px; }
+.resume-paper .markdown h1 { font-size: 22px; letter-spacing: -.5px; margin-bottom: 4px; }
+.resume-paper .markdown h2 { font-size: 11px; letter-spacing: 1.2px; text-transform: uppercase; color: var(--muted); border-bottom: 1px solid var(--line); padding-bottom: 6px; margin: 22px 0 10px; }
+.resume-paper .markdown h3 { font-size: 13px; margin: 14px 0 2px; }
+.resume-paper .markdown h3 + p { color: var(--muted); font-size: 12px; margin-bottom: 6px; }
+.md-source { margin: 0; background: var(--bg); border: 1px solid var(--line); border-radius: 9px; padding: 18px 20px; font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text); }
+.meter-row { display: flex; align-items: baseline; gap: 8px; }
+.meter-row strong { font: 750 26px 'Manrope', sans-serif; letter-spacing: -1px; }
+.meter-row span { font-size: 12px; color: var(--muted); }
+.meter { height: 6px; border-radius: 6px; background: var(--line); overflow: hidden; margin-top: 10px; }
+.meter span { display: block; height: 100%; border-radius: 6px; background: #7560bd; }
+.ats-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; font-size: 12px; line-height: 1.5; }
+.ats-list li { display: flex; gap: 8px; align-items: flex-start; }
+.ats-list svg { color: var(--ok-text); margin-top: 2px; }
+.rs-note { font-size: 11px; color: var(--muted); line-height: 1.6; margin-top: 8px; }
+.improved-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 8px; }
+.improved-list > li { border: 1px solid var(--line); border-radius: 9px; overflow: hidden; }
+.improved-toggle { width: 100%; display: flex; align-items: center; gap: 10px; text-align: left; padding: 12px 14px; font-size: 12px; }
+.improved-toggle:hover { background: var(--soft); }
+.improved-toggle strong { font-weight: 650; flex: 1; min-width: 0; }
+.improved-toggle small { font-size: 11px; color: var(--muted); }
+.improved-toggle svg { color: var(--muted); transition: transform .15s; }
+.improved-toggle[aria-expanded=true] svg { transform: rotate(180deg); }
+.improved-list .compare { margin: 0; padding: 0 14px 14px; }
+
+@media (min-width: 901px) { .rs-job { position: sticky; top: 16px; } }
+@media (max-width: 900px) { .resume-layout { grid-template-columns: 1fr; } }
+@media (max-width: 640px) {
+  .resume-tools { margin-left: 0; width: 100%; }
+  .resume-tools > * { flex: 1; }
+  .resume-paper { padding: 16px; }
+  .improved-toggle small { display: none; }
+}
+.resume > .actions { margin-bottom: 32px; }

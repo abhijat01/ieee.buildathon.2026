@@ -22,6 +22,17 @@ def test_save_and_list_are_scoped_to_the_owner(portfolio):
         portfolio.get_item("other-member", saved.id)
 
 
+def test_get_items_returns_only_the_items_of_the_owner_in_the_given_order(portfolio):
+    first = portfolio.save_item("owner", save_request(title="First"))
+    second = portfolio.save_item("owner", save_request(title="Second"))
+    other = portfolio.save_item("other-member", save_request())
+    assert [item.title for item in portfolio.get_items("owner", [second.id, first.id, second.id])] == ["Second", "First"]
+    assert portfolio.get_items("owner", []) == []
+    for item_ids in ([first.id, other.id], [first.id, "unknown-id"]):
+        with pytest.raises(PortfolioItemNotFound):
+            portfolio.get_items("owner", item_ids)
+
+
 def test_save_cleans_the_fields(portfolio):
     saved = portfolio.save_item("owner", save_request(title="  Atlas  ", company="  ", end_date="",
                                                       skills=["Python", " python ", "", "React"]))
